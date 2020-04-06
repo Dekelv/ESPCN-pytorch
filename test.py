@@ -4,33 +4,18 @@ import torch
 import torch.backends.cudnn as cudnn
 import numpy as np
 import PIL.Image as pil_image
+import cv2
+import glob
+
+import videoPreprocessing as vp
 
 from models import ESPCN
 from utils import convert_ycbcr_to_rgb, preprocess, calc_psnr
 
+image_file = ""
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--weights-file', type=str, required=True)
-    parser.add_argument('--image-file', type=str, required=True)
-    parser.add_argument('--scale', type=int, default=3)
-    args = parser.parse_args()
-
-    cudnn.benchmark = True
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-    model = ESPCN(scale_factor=args.scale).to(device)
-
-    state_dict = model.state_dict()
-    for n, p in torch.load(args.weights_file, map_location=lambda storage, loc: storage).items():
-        if n in state_dict.keys():
-            state_dict[n].copy_(p)
-        else:
-            raise KeyError(n)
-
-    model.eval()
-
-    image = pil_image.open(args.image_file).convert('RGB')
+def testImage(image_file):
+    image = pil_image.open(image_file).convert('RGB')
 
     image_width = (image.width // args.scale) * args.scale
     image_height = (image.height // args.scale) * args.scale
@@ -38,7 +23,7 @@ if __name__ == '__main__':
     hr = image.resize((image_width, image_height), resample=pil_image.BICUBIC)
     lr = hr.resize((hr.width // args.scale, hr.height // args.scale), resample=pil_image.BICUBIC)
     bicubic = lr.resize((lr.width * args.scale, lr.height * args.scale), resample=pil_image.BICUBIC)
-    bicubic.save(args.image_file.replace('.', '_bicubic_x{}.'.format(args.scale)))
+    bicubic.save(image_file.replace('tempFiles', 'bicubic'.format(args.scale)))
 
     lr, _ = preprocess(lr, device)
     hr, _ = preprocess(hr, device)
@@ -55,4 +40,60 @@ if __name__ == '__main__':
     output = np.array([preds, ycbcr[..., 1], ycbcr[..., 2]]).transpose([1, 2, 0])
     output = np.clip(convert_ycbcr_to_rgb(output), 0.0, 255.0).astype(np.uint8)
     output = pil_image.fromarray(output)
-    output.save(args.image_file.replace('.', '_espcn_x{}.'.format(args.scale)))
+    output.save(image_file.replace('tempFiles', 'highRes'.format(args.scale)))
+
+
+def combineImagesToVideo():
+    img_array = []
+    for filename in glob.glob('highRes/*.jpg'):
+        img = cv2.imread(filename)
+        height, width, layers = img.shape
+        size = (width,height)
+        img_array.append(img) 
+    out = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 30, size)
+    
+    for i in range(len(img_array)):
+        out.write(img_array[i])
+    out.release()
+
+
+def testVideo():
+    vp.SaveFrames(args.video_file, "tempFiles")
+    for image_path in sorted(glob.glob('{}/*'.format("tempFiles"))):
+        image_file = image_path
+        testImage(image_file)
+        combineImagesToVideo()
+        
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights-file', type=str, required=True)
+    parser.add_argument('--image-file', type=str, required=False)
+    parser.add_argument('--frames-dir', type=str, required=False)
+    parser.add_argument('--video-file', type=str, required=False)
+    parser.add_argument('--scale', type=int, default=3)
+    args = parser.parse_args()
+    
+    if args.video_file is None and args.image_file is None:
+        print("Please provide a video or image file")
+        exit()
+    
+    cudnn.benchmark = True
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+    model = ESPCN(scale_factor=args.scale).to(device)
+
+    state_dict = model.state_dict()
+    for n, p in torch.load(args.weights_file, map_location=lambda storage, loc: storage).items():
+        if n in state_dict.keys():
+            state_dict[n].copy_(p)
+        else:
+            raise KeyError(n)
+
+    model.eval()
+
+    if args.image_file is not None:
+        image_file = args.image_file
+        testImage(image_file)
+    else:
+        testVideo()
+        combineImagesToVideo()

@@ -1,0 +1,1 @@
+python train.py --train-file "preprocessing/videoTrainData.h5" --eval-file "preprocessing/videoEvalData.h5" --outputs-dir "BLAH_BLAH/outputs" --scale 3 --lr 1e-3 --batch-size 16 --num-epochs 200 --num-workers 8 --seed 123 
