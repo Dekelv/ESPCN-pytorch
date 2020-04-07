@@ -6,6 +6,7 @@ import numpy as np
 import PIL.Image as pil_image
 import cv2
 import glob
+import os 
 
 import videoPreprocessing as vp
 
@@ -46,6 +47,7 @@ def testImage(image_file):
 def combineImagesToVideo():
     img_array = []
     for filename in glob.glob('highRes/*.jpg'):
+        print(filename)
         img = cv2.imread(filename)
         height, width, layers = img.shape
         size = (width,height)
@@ -62,8 +64,12 @@ def testVideo():
     for image_path in sorted(glob.glob('{}/*'.format("tempFiles"))):
         image_file = image_path
         testImage(image_file)
-        combineImagesToVideo()
         
+def removeFolderContent(dir):
+    files = glob.glob(dir+"/*")
+    for f in files:
+        os.remove(f)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights-file', type=str, required=True)
@@ -91,9 +97,15 @@ if __name__ == '__main__':
 
     model.eval()
 
+    #check if to run a video or image test
     if args.image_file is not None:
         image_file = args.image_file
         testImage(image_file)
     else:
         testVideo()
         combineImagesToVideo()
+        removeFolderContent('bicubic')
+        removeFolderContent('highRes')
+        removeFolderContent('tempFiles')
+        print("video conversion complete")
+        

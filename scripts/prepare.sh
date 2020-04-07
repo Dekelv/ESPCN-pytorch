@@ -1,4 +1,4 @@
-python prepare.py --images-dir "preprocessing/subdata" \
+python prepare.py --images-dir "preprocessing/train" \
                 --output-path "preprocessing/videoTrainData.h5" \
                 --scale 3 \
 
