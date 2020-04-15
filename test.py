@@ -14,8 +14,9 @@ from models import ESPCN
 from utils import convert_ycbcr_to_rgb, preprocess, calc_psnr
 
 image_file = ""
-
+totalPsnr = 0
 def testImage(image_file):
+    global totalPsnr
     image = pil_image.open(image_file).convert('RGB')
 
     image_width = (image.width // args.scale) * args.scale
@@ -34,6 +35,7 @@ def testImage(image_file):
         preds = model(lr).clamp(0.0, 1.0)
 
     psnr = calc_psnr(hr, preds)
+    totalPsnr += psnr
     print('PSNR: {:.2f}'.format(psnr))
 
     preds = preds.mul(255.0).cpu().numpy().squeeze(0).squeeze(0)
@@ -41,7 +43,8 @@ def testImage(image_file):
     output = np.array([preds, ycbcr[..., 1], ycbcr[..., 2]]).transpose([1, 2, 0])
     output = np.clip(convert_ycbcr_to_rgb(output), 0.0, 255.0).astype(np.uint8)
     output = pil_image.fromarray(output)
-    output.save(image_file.replace('tempFiles', 'highRes'.format(args.scale)))
+    newImageFile = image_file.replace('tempFiles\\','').replace("png",'')
+    output.save('highRes\\'+ newImageFile + '{:.2f}'.format(psnr)+'.png')
 
 
 def combineImagesToVideo():
@@ -60,11 +63,14 @@ def combineImagesToVideo():
 
 
 def testVideo():
+    global totalPsnr
     vp.SaveFrames(args.video_file, "tempFiles")
+    count = 0
     for image_path in sorted(glob.glob('{}/*'.format("tempFiles"))):
         image_file = image_path
         testImage(image_file)
-        
+        count+=1
+    print("avg psnr = " + str(totalPsnr/count))
 def removeFolderContent(dir):
     files = glob.glob(dir+"/*")
     for f in files:
@@ -104,8 +110,8 @@ if __name__ == '__main__':
     else:
         testVideo()
         combineImagesToVideo()
-        removeFolderContent('bicubic')
-        removeFolderContent('highRes')
-        removeFolderContent('tempFiles')
+        #removeFolderContent('bicubic')
+        #removeFolderContent('highRes')
+        #removeFolderContent('tempFiles')
         print("video conversion complete")
         
