@@ -13077,7 +13077,8 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Real-Time-Single-Image-and-Video-Super-Resolution-Using-an-Efficient-Sub-Pixel-Convolutional-Neural-Network-(ESPCN)">Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel Convolutional Neural Network (ESPCN)<a class="anchor-link" href="#Real-Time-Single-Image-and-Video-Super-Resolution-Using-an-Efficient-Sub-Pixel-Convolutional-Neural-Network-(ESPCN)">&#182;</a></h1>
+<h1 id="Real-Time-Single-Image-and-Video-Super-Resolution-Using-an-Efficient-Sub-Pixel-Convolutional-Neural-Network-(ESPCN)">Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel Convolutional Neural Network (ESPCN)<a class="anchor-link" href="#Real-Time-Single-Image-and-Video-Super-Resolution-Using-an-Efficient-Sub-Pixel-Convolutional-Neural-Network-(ESPCN)">&#182;</a></h1><hr>
+
 </div>
 </div>
 </div>
@@ -13085,6 +13086,7 @@ div#notebook {
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="A-Reproducibility-Effort">A Reproducibility Effort<a class="anchor-link" href="#A-Reproducibility-Effort">&#182;</a></h2><p>In this blog-post, we compile our efforts to reproduce the posited results from table 1 of the paper <a href="https://arxiv.org/abs/1609.05158">Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel Convolutional Neural Network</a> by Shi et al. Building upon the code effort by Jeffrey Yeo (yjn870) [<a href="https://github.com/yjn870/ESPCN-pytorch">Github repo</a>], we made certain improvements and additionally reproduced the experiments for 4K and video from the paper, which were not a part of Yeo's previous work. We present our reproducibility effort as follows.</p>
+<p><img src="thumbnails/DL_Teaser.png" alt="Drawing" style="width: 400px;"/></p>
 
 </div>
 </div>
@@ -13104,7 +13106,7 @@ div#notebook {
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><img src="thumbnails/fig1.png" alt="ESPCN with 2 CNN layers and 1 Sub-Pixel Convolution Layer"></p>
 <h5 id="ESPCN-with-2-CNN-layers-and-1-Sub-Pixel-Convolution-Layer">ESPCN with 2 CNN layers and 1 Sub-Pixel Convolution Layer<a class="anchor-link" href="#ESPCN-with-2-CNN-layers-and-1-Sub-Pixel-Convolution-Layer">&#182;</a></h5><p>In the proposed architecture, firstly, an <em>L</em> layer convolutional neural network is directly applied to
-the LR image after which a <em>sub-pixel convolutional layer</em> upscales the LR feature maps to generate the super-resolved image. Additionally, a <em>deconvolution layer</em> is also added which is a more generic form of the interpolation filter. More information can be captured when using this additional deconvolution layer.</p>
+the LR image after which a <em>sub-pixel convolutional layer</em> upscales the LR feature maps to generate the super-resolved image. Additionally, a <em>deconvolution layer</em> is also added which is a more generic form of the interpolation filter. More information can be captured when using this additional deconvolution layer. For brevity of content, the mathematically treatment has been abstracted and can be found on the poster.</p>
 <p>In order to verify that ESPCN could actually outperform the previous super-resolution algorithm, we reproduce this paper by using experiments as following.</p>
 
 </div>
@@ -13133,12 +13135,98 @@ the LR image after which a <em>sub-pixel convolutional layer</em> upscales the L
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The two image datasets used for evaluation are public available benchmark datasets. The first one is the Timofte dataset, which contains 91 training images and two test dataset. The second one is 50,000 randomly selected images from ImageNet for the training.</p>
-<p>As for video experiments, in the paper, the author uses publicly available Xiph database.</p>
-<p>According to the paper, the author ran the experiment on a K2 GPU while in our cases, we ran our experiment on our local computer, which is</p>
+<h3 id="Dataset-Description">Dataset Description<a class="anchor-link" href="#Dataset-Description">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The image datasets used for evaluation and ablation studies are publicly available, benchmark datasets.</p>
+<ol>
+<li>Training data: <ul>
+<li>The Timofte dataset, which contains 91-images.</li>
+</ul>
+</li>
+<li>Three evaluation datasets:<ul>
+<li>Set5 Images</li>
+<li>Set14 Images</li>
+<li>BSD500 Images</li>
+</ul>
+</li>
+</ol>
+<p>Our expermental results are captured in the following sections.</p>
+<p>As for video experiments, in the paper, the author uses publicly available <strong>Xiph</strong> dataset. As video super-resolution was not part of the reprocibility task, we decided to use publically available <strong>4K Images</strong> dataset <a href="https://www.kaggle.com/evgeniumakov/images4k">Link</a> to train our model. We present some images from the video-SR results obtained through our experiments with this model.</p>
+<p>According to the paper, the author ran the experiments on a <strong>K2 GPU</strong> while in our case (<em>in a bid to obtain standardized results</em>) we used the <strong>Tesla K80 GPU</strong> available through <strong>Google Colab</strong>.</p>
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="The-experiment-involves-two-important-steps,">The experiment involves two important steps,<a class="anchor-link" href="#The-experiment-involves-two-important-steps,">&#182;</a></h3><ol>
+<li>Generating low-resolution images from the given data. (HR space -&gt; LR space)<ul>
+<li>We first perform bicubic re-sampling of the images which are downscaled by a factor of 3 ( <code>scale</code> parameter),</li>
+<li>Followed by 17x17 pixel sub-sampling of the original HR images.</li>
+</ul>
+</li>
+<li>Eventually, the model applies a periodic-shuffling operation these low-res images (subsamples of original HR images) to train and evaluate the model.</li>
+</ol>
+<p><em>Additionally, we work with the <strong>Y-channel (luminance)</strong> as it is most effectively observed.</em></p>
+<h4 id="Data-Prepearation">Data Prepearation<a class="anchor-link" href="#Data-Prepearation">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">lr_patches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">hr_patches</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">image_path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/*&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">images_dir</span><span class="p">))):</span>
+        <span class="n">hr</span> <span class="o">=</span> <span class="n">pil_image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s1">&#39;RGB&#39;</span><span class="p">)</span>
+        <span class="n">hr_width</span> <span class="o">=</span> <span class="p">(</span><span class="n">hr</span><span class="o">.</span><span class="n">width</span> <span class="o">//</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span>
+        <span class="n">hr_height</span> <span class="o">=</span> <span class="p">(</span><span class="n">hr</span><span class="o">.</span><span class="n">height</span> <span class="o">//</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span>
+        <span class="n">hr</span> <span class="o">=</span> <span class="n">hr</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">hr_width</span><span class="p">,</span> <span class="n">hr_height</span><span class="p">),</span> <span class="n">resample</span><span class="o">=</span><span class="n">pil_image</span><span class="o">.</span><span class="n">BICUBIC</span><span class="p">)</span>
+        <span class="n">lr</span> <span class="o">=</span> <span class="n">hr</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">hr_width</span> <span class="o">//</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">hr_height</span> <span class="o">//</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span><span class="p">),</span> <span class="n">resample</span><span class="o">=</span><span class="n">pil_image</span><span class="o">.</span><span class="n">BICUBIC</span><span class="p">)</span>
+        <span class="n">hr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hr</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">lr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lr</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">hr</span> <span class="o">=</span> <span class="n">convert_rgb_to_y</span><span class="p">(</span><span class="n">hr</span><span class="p">)</span>
+        <span class="n">lr</span> <span class="o">=</span> <span class="n">convert_rgb_to_y</span><span class="p">(</span><span class="n">lr</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">args</span><span class="o">.</span><span class="n">patch_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">stride</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">args</span><span class="o">.</span><span class="n">patch_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">stride</span><span class="p">):</span>
+                <span class="n">lr_patches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lr</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">patch_size</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">patch_size</span><span class="p">])</span>
+                <span class="n">hr_patches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hr</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span><span class="p">:</span><span class="n">i</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">patch_size</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">j</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span><span class="p">:</span><span class="n">j</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">patch_size</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">scale</span><span class="p">])</span>
+
+    <span class="n">lr_patches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lr_patches</span><span class="p">)</span>
+    <span class="n">hr_patches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hr_patches</span><span class="p">)</span>
+
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;lr&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">lr_patches</span><span class="p">)</span>
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">hr_patches</span><span class="p">)</span>
+
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+<span class="c1"># The input parameters for data preparation.</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--images-dir&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--output-path&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--scale&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--patch-size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">17</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--stride&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--eval&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
@@ -13170,9 +13258,9 @@ the LR image after which a <em>sub-pixel convolutional layer</em> upscales the L
         <span class="nb">super</span><span class="p">(</span><span class="n">ESPCN</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">first_part</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
             <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">num_channels</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">5</span><span class="o">//</span><span class="mi">2</span><span class="p">),</span>
-            <span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
             <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">3</span><span class="o">//</span><span class="mi">2</span><span class="p">),</span>
-            <span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">last_part</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
             <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">num_channels</span> <span class="o">*</span> <span class="p">(</span><span class="n">scale_factor</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">3</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span>
@@ -13242,14 +13330,7 @@ the LR image after which a <em>sub-pixel convolutional layer</em> upscales the L
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Image-super-resolution">Image super resolution<a class="anchor-link" href="#Image-super-resolution">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Training">Training<a class="anchor-link" href="#Training">&#182;</a></h4><p>The code for training of the ESPCN model is as following.</p>
+<h3 id="Image-super-resolution">Image super resolution<a class="anchor-link" href="#Image-super-resolution">&#182;</a></h3><h4 id="Training">Training<a class="anchor-link" href="#Training">&#182;</a></h4><p>The code for training of the ESPCN model is as following.</p>
 <p>For training, the dataset we used including <em>91 images dataset</em> and also <em>4k image dataset</em>.</p>
 
 </div>
@@ -13518,14 +13599,15 @@ the LR image after which a <em>sub-pixel convolutional layer</em> upscales the L
 </tbody>
 </table>
 <ul>
-<li><p>Higher PSNR values were achieved across the board as compared to the results posited in the paper.</p>
+<li><p><strong>Higher PSNR</strong> values were achieved across the board as compared to the results posited in the paper.</p>
 </li>
-<li><p>Additionally, it should be noted that the model taken from the paper is trained on ImageNet (bigger data-set).</p>
+<li><p>Additionally, it should be noted that the model taken from the paper is trained on ImageNet (~50,000 Images) whereas our experimental results were obtained using the 91-Images dataset which is significantly smaller.</p>
 </li>
 </ul>
-<p>We compare the results of ESPCN with Bicubic, and it can be clearly seen that ESPCN could obtain better results compared to Bicubic.
-<img src="thumbnails/result.jpg" alt="Comparision between ESPCN and bicubic">
-<img src="thumbnails/DL_teaser.png" alt="Drawing" style="width: 400px;"/></p>
+<p>We compare the results of ESPCN with Bicubic, and it can be clearly seen that ESPCN could obtain better results compared to Bicubic.</p>
+<hr>
+<p><img src="thumbnails/result.jpg" alt="Comparision between ESPCN and bicubic"></p>
+<hr>
 
 </div>
 </div>
@@ -13533,15 +13615,16 @@ the LR image after which a <em>sub-pixel convolutional layer</em> upscales the L
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Hyperparameter-tuning">Hyperparameter tuning<a class="anchor-link" href="#Hyperparameter-tuning">&#182;</a></h4><p>In order to decide which is the best hyperparameter for our model, we carried out several experiments as following.</p>
+<h4 id="Hyperparameter-tuning">Hyperparameter tuning<a class="anchor-link" href="#Hyperparameter-tuning">&#182;</a></h4><p>In order to understand the effects and eventually tune the hyperparameters for our model, we carried out several ablation studies as follows.</p>
 <table><tr><td><img src="thumbnails/activations.png" alt="Drawing" style="width: 400px;"/></td><td><img src="thumbnails/psnrbatch.jpeg" alt="Drawing" style="width: 400px;"/>></td></tr></table>
-<table><tr><td><img src="thumbnails/psnrlearningrate.jpeg" alt="Drawing" style="width: 400px;"/></td><td><img src="thumbnails/psnrscale.jpeg" alt="Drawing" style="width: 400px;"/>></td></tr></table><p>From the experiment we get results as following:</p>
+<table><tr><td><img src="thumbnails/psnrlearningrate.jpeg" alt="Drawing" style="width: 400px;"/></td><td><img src="thumbnails/psnrscale.jpeg" alt="Drawing" style="width: 400px;"/>></td></tr></table><p>From the experiments, we posit the following results:</p>
 <ul>
-<li>We observe optimal performance for batch-size = 4.</li>
-<li>The performance (PSNR value) drops significantly for learning rate &gt; 0.08.</li>
-<li>scale = 3 gives optimal performance i.e. the highest PSNR value (but it seems to be quite data dependent).</li>
-<li>Observed performance of activation functions based on PSNR scores: ReLU &gt; GELU &gt; Tanh.</li>
+<li>We observe optimal performance for <code>batch-size = 4</code>.</li>
+<li>The performance (PSNR value) drops significantly for <code>learning rate &gt; 0.08</code>.</li>
+<li><code>scale = 3</code> gives optimal performance i.e. the highest PSNR value (but it seems to be quite data dependent).</li>
+<li>Observed performance of activation functions based on PSNR scores: <code>ReLU &gt; GELU &gt; Tanh</code>.</li>
 </ul>
+<hr>
 
 </div>
 </div>
@@ -13549,7 +13632,7 @@ the LR image after which a <em>sub-pixel convolutional layer</em> upscales the L
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Video-super-resolution">Video super resolution<a class="anchor-link" href="#Video-super-resolution">&#182;</a></h3>
+<h2 id="Video-super-resolution">Video super resolution<a class="anchor-link" href="#Video-super-resolution">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -13570,10 +13653,81 @@ the LR image after which a <em>sub-pixel convolutional layer</em> upscales the L
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Experiment-results">Experiment results<a class="anchor-link" href="#Experiment-results">&#182;</a></h4><p>In the images below you can see the result of video super resolution.</p>
+<p>The hyperparameter setting for video SR are as follows:</p>
+<table>
+<thead><tr>
+<th style="text-align:left">Hyper-parameters</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>Scale</code></td>
+<td><strong>4</strong></td>
+</tr>
+<tr>
+<td style="text-align:left"><code>learning rate</code></td>
+<td><strong>1e-3</strong></td>
+</tr>
+<tr>
+<td style="text-align:left"><code>batch-size</code></td>
+<td><strong>16</strong></td>
+</tr>
+<tr>
+<td style="text-align:left"><code>number of epochs</code></td>
+<td><strong>200</strong></td>
+</tr>
+<tr>
+<td style="text-align:left"><code>number of workers</code></td>
+<td><strong>8</strong></td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Results">Results<a class="anchor-link" href="#Results">&#182;</a></h4><p>We present the images (below) as a the result of video super resolution. We conclude that it does a pretty good job of sharpening the images.</p>
 <p><img src="thumbnails/superResVs1080P.png" alt="Drawing" style="width: 400px;"/>
 <img src="thumbnails/heyenaVs.png" alt="Drawing" style="width: 400px;"/>
 <img src="thumbnails/elephant.png" alt="Drawing" style="width: 400px;"/></p>
+<hr>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="References:">References:<a class="anchor-link" href="#References:">&#182;</a></h2><ul>
+<li><a href="http://arxiv.org/abs/1609.05158">Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel Convolutional Neural Network. Shi et al.</a></li>
+<li><a href="https://github.com/yjn870/ESPCN-pytorch">ESPCN-pytorch. Jeffrey Yeo (yjn870)</a></li>
+<li>Image Super-Resolution Using Deep Convolutional Networks. Dong et al. CoRR: abs/1501.00092. 2015</li>
+<li>Y. Chen and T. Pock, \"Trainable Nonlinear Reaction Diffusion: A Flexible Framework for Fast and Effective Image Restoration,\" in IEEE Transactions on Pattern Analysis and Machine Intelligence, vol. 39, no. 6, pp. 1256-1272, 1 June 2017</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 
 </div>
 </div>
