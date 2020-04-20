@@ -1,1 +1,1 @@
-python test.py --weights-file "BLAH_BLAH\outputs\x3\epoch_133.pth" --video-file "preprocessing\10SecNat.mp4" --scale 3
+python test.py --weights-file "trained_models\best_scale_4.pth" --video-file "test_videos\10SecNat_1080p_.mp4" --activation-function "GELU" --scale 4
