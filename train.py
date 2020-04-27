@@ -34,12 +34,16 @@ if __name__ == '__main__':
         os.makedirs(args.outputs_dir)
 
     cudnn.benchmark = True
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
+    print("cuda info:")
+    print(torch.cuda.current_device())
+    device = torch.device('cuda')
+    print(torch.cuda.device_count())    
+    print(torch.cuda.get_device_name(0))
     torch.manual_seed(args.seed)
-
-    model = ESPCN(scale_factor=args.scale).to(device)
-    criterion = nn.MSELoss()
+    print(torch.cuda.is_available())
+    print(torch.backends.cudnn.enabled)
+    model = ESPCN(scale_factor=args.scale).to(device=device)
+    criterion = nn.MSELoss().to(device)
     optimizer = optim.Adam([
         {'params': model.first_part.parameters()},
         {'params': model.last_part.parameters(), 'lr': args.lr * 0.1}
@@ -71,8 +75,8 @@ if __name__ == '__main__':
             for data in train_dataloader:
                 inputs, labels = data
 
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+                inputs = inputs.to(device=device)
+                labels = labels.to(device=device)
 
                 preds = model(inputs)
 
@@ -91,18 +95,21 @@ if __name__ == '__main__':
 
         model.eval()
         epoch_psnr = AverageMeter()
-
+  
         for data in eval_dataloader:
+   
             inputs, labels = data
-
+     
             inputs = inputs.to(device)
+      
             labels = labels.to(device)
 
             with torch.no_grad():
+                
                 preds = model(inputs).clamp(0.0, 1.0)
 
             epoch_psnr.update(calc_psnr(preds, labels), len(inputs))
-
+      
         print('eval psnr: {:.2f}'.format(epoch_psnr.avg))
 
         if epoch_psnr.avg > best_psnr:

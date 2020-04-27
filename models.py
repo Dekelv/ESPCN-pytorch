@@ -1,16 +1,31 @@
 import math
 from torch import nn
 
+# Based on the explanation given in the paper,
+# Number of layers (l) = 3
+# kernel, i/p (f_i, n_i) where (5,64) -> (3, 32) -> 3
+# GELU paper https://arxiv.org/pdf/1606.08415v3.pdf
+# GELU incorporates regularisation (dropout) inherently. It demonstrates improvements in Computer Vision tasks.
 
 class ESPCN(nn.Module):
-    def __init__(self, scale_factor, num_channels=1):
+    def __init__(self, scale_factor, activation,num_channels=1):
         super(ESPCN, self).__init__()
+
+        if activation == "ReLU":
+            a = nn.ReLU()
+        if activation == "GELU":
+            a = nn.GELU()
+
         self.first_part = nn.Sequential(
             nn.Conv2d(num_channels, 64, kernel_size=5, padding=5//2),
-            nn.Tanh(),
+            # used GeLU as activation function PSNR -> 32.99
+            a,
             nn.Conv2d(64, 32, kernel_size=3, padding=3//2),
-            nn.Tanh(),
+            a,
         )
+        print("num of channels")
+        print(num_channels)    
+        # pixel shuffle is basically up-sampling the data from LR -> HR
         self.last_part = nn.Sequential(
             nn.Conv2d(32, num_channels * (scale_factor ** 2), kernel_size=3, padding=3 // 2),
             nn.PixelShuffle(scale_factor)
@@ -18,6 +33,7 @@ class ESPCN(nn.Module):
 
         self._initialize_weights()
 
+    
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):

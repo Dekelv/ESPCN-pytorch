@@ -44,6 +44,13 @@ python test.py --weights-file "BLAH_BLAH/espcn_x3.pth" \
                --scale 3
 ```
 
+To Test a video use the following:
+
+```bash
+python test.py  --weights-file "PATH TO MODEL" \
+                --video-file "preprocessing\10SecNat.mp4" \
+                --scale 3
+```
 ## Results
 
 PSNR was calculated on the **Y channel**.
